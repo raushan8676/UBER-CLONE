@@ -206,68 +206,75 @@ The `/users/register` endpoint:
 
 This endpoint is the foundation of the application's authentication system.
 
---------------------------------------------------------------------------------------------
+Here is your formatted **README.md** version:
 
-📘 /users/login API Documentation
-Endpoint Overview
-
-HTTP Method: POST
-Route: /users/login
-Content-Type: application/json
-
-The /users/login endpoint authenticates an existing user and returns an authentication token.
-
-When a client (frontend app, mobile app, etc.) sends login credentials:
-
-The request data is validated.
-
-The email is checked in the database.
-
-The password is compared with the stored hashed password.
-
-A JWT (JSON Web Token) is generated.
-
-The authenticated user data and token are returned.
+----------------------------------------------------------------------------------------------------
 
 
+# 📘 `/users/login` API Documentation
 
-🔎 What Is This Endpoint Used For?
+## 🔐 Endpoint Overview
+
+* **HTTP Method:** `POST`
+* **Route:** `/users/login`
+* **Content-Type:** `application/json`
+
+The `/users/login` endpoint authenticates an existing user and returns a **JWT (JSON Web Token)** upon successful login.
+
+When a client (web app, mobile app, etc.) sends login credentials:
+
+1. The request data is validated
+2. The email is checked in the database
+3. The password is compared with the stored hashed password
+4. A JWT token is generated
+5. Authenticated user data and token are returned
+
+---
+
+## 🔎 What Is This Endpoint Used For?
 
 This endpoint allows existing users to:
-Log into their account
-Verify their credentials securely
-Receive an authentication token
-Access protected routes
 
+* Log into their account
+* Verify their credentials securely
+* Receive an authentication token
+* Access protected routes
 
+---
 
-📥 Request Body Requirements
+## 📥 Request Body Requirements
 
-The endpoint expects a JSON object with the following structure:
+The endpoint expects a JSON object in the following format:
 
+```json
 {
   "email": "john@example.com",
   "password": "password123"
 }
+```
 
+### 🧾 Field Definitions
 
-🧾 Field Definitions
-Field	Type	Required	Description
-email	String	Yes	User's registered email (valid format)
-password	String	Yes	User's password (minimum 6 characters long)
+| Field    | Type   | Required | Description                            |
+| -------- | ------ | -------- | -------------------------------------- |
+| email    | String | Yes      | User's registered email (valid format) |
+| password | String | Yes      | User's password (minimum 6 characters) |
 
+---
 
-📌 Validation Rules
+## 📌 Validation Rules
 
-Before authentication, the following checks are performed:
-email must be in valid email format
-password must be at least 6 characters long
-If any required field is missing or invalid, request fails
+Before authentication, the following validations are performed:
+
+* `email` must be in valid email format
+* `password` must be at least 6 characters long
+* All required fields must be present
+
 If validation fails, the server returns:
 
+### ❌ 400 – Bad Request
 
-
-❌ 400 – Bad Request
+```json
 {
   "errors": [
     {
@@ -277,53 +284,66 @@ If validation fails, the server returns:
     }
   ]
 }
+```
 
+---
 
+## 🔐 Authentication Process Explained
 
-🔐 Authentication Process Explained
-1️⃣ Email Lookup
+### 1️⃣ Email Lookup
 
 The system searches for a user with the provided email:
 
-const user = await usermodel.findOne({email}).select('+password');
+```javascript
+const user = await usermodel.findOne({ email }).select('+password');
+```
 
 If no user is found:
 
+```json
 {
   "message": "Invalid email or password"
 }
+```
 
+---
 
-2️⃣ Password Verification
+### 2️⃣ Password Verification
 
-The entered password is compared with the stored hashed password using a secure comparison method:
+The entered password is securely compared with the stored hashed password:
 
+```javascript
 const isMatch = await user.comparePassword(password);
+```
 
 If the password does not match, the same generic error is returned:
 
+```json
 {
   "message": "Invalid email or password"
 }
+```
 
-⚠ The system intentionally does not specify whether the email or password is incorrect for security reasons.
+> ⚠ The system intentionally does not specify whether the email or password is incorrect for security reasons.
 
+---
 
-
-3️⃣ JWT Token Generation
+### 3️⃣ JWT Token Generation
 
 If authentication succeeds:
 
-A JWT is generated
+* A JWT token is generated
+* The token contains the user's ID
+* The token is signed using `JWT_SECRET`
+* The token must be included in future protected requests
 
-The token contains the user's ID
+---
 
-The token is signed using JWT_SECRET
+## ✅ Successful Response
 
-This token must be included in future protected requests.
+**Status Code:** `200 OK`
 
-✅ Successful Response
-Status Code: 200 OK
+```json
 {
   "user": {
     "_id": "65f1234567890abcdef12345",
@@ -335,75 +355,90 @@ Status Code: 200 OK
   },
   "token": "<JWT_TOKEN>"
 }
+```
 
+### Response Fields Explained
 
-Response Fields Explained
-Field	Description
-user	Authenticated user object
-token	JWT authentication token
-❌ Error Responses
-400 – Bad Request
+| Field | Description               |
+| ----- | ------------------------- |
+| user  | Authenticated user object |
+| token | JWT authentication token  |
+
+---
+
+## ❌ Error Responses
+
+### 400 – Bad Request
 
 Returned when:
 
-Validation fails
-
-Email does not exist
-
-Password is incorrect
+* Validation fails
+* Email does not exist
+* Password is incorrect
 
 Example:
 
+```json
 {
   "message": "Invalid email or password"
 }
-500 – Internal Server Error
+```
+
+---
+
+### 500 – Internal Server Error
 
 Returned when an unexpected server error occurs.
 
-Possible causes:
+**Possible causes:**
 
-Database connection failure
+* Database connection failure
+* Server configuration issue
+* Missing environment variables
 
-Server configuration issue
+---
 
-Missing environment variables
+## 🔄 Internal Flow (Step-by-Step)
 
-🔄 Internal Flow (Step-by-Step)
+1. Request reaches `/users/login`
+2. `express-validator` validates request body
+3. User is searched by email in MongoDB
+4. Password is compared using secure hashing
+5. JWT token is generated
+6. Server responds with `200 OK`
 
-Request reaches /users/login
+---
 
-express-validator validates request body
-
-User is searched by email in MongoDB
-
-Password is compared using secure hashing
-
-JWT token is generated
-
-Server responds with 200 OK
-
-⚙️ Environment Requirements
+## ⚙️ Environment Requirements
 
 The following environment variable must be defined:
 
+```env
 JWT_SECRET=your_secret_key
+```
 
 This key is used to sign authentication tokens.
 
-📌 Important Notes
+---
 
-The password is never returned in the response
+## 📌 Important Notes
 
-Error messages are intentionally generic for security
+* The password is **never returned** in the response
+* Error messages are intentionally generic for security
+* The token should be stored securely on the client side
+* The token must be included in the `Authorization` header for protected routes
 
-The token should be stored securely on the client side
+Example:
 
-The token must be included in Authorization headers for protected routes
+```http
+Authorization: Bearer <JWT_TOKEN>
+```
 
-📎 Summary
+---
 
-The /users/login endpoint:
+## 📎 Summary
+
+The `/users/login` endpoint:
 
 ✔ Validates credentials
 ✔ Verifies user identity
@@ -412,3 +447,5 @@ The /users/login endpoint:
 ✔ Returns authenticated user data
 
 This endpoint enables secure access to the application for registered users.
+
+---
