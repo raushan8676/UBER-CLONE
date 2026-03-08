@@ -1,8 +1,14 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { CaptainDataContext } from '../context/CaptainContext'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
 const CaptainSignup = () => {
+
+    const navigate = useNavigate()
+
 
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
@@ -11,26 +17,46 @@ const CaptainSignup = () => {
     const [color, setColor] = useState('')
     const [plate, setPlate] = useState('')
     const [capacity, setCapacity] = useState('')
-    const [Type, setType] = useState('')
-    const [captainData, setCaptainData] = useState({})
+    const [vehicleType, setVehicleType] = useState('')
+    // const [captainData, setCaptainData] = useState({})
 
-    const submitHandler = (e) => {
+    const { captain, setCaptain } = React.useContext(CaptainDataContext);
+
+    const submitHandler = async (e) => {
         e.preventDefault()
 
-        setCaptainData({
+        const CaptainData = {
             fullname: {
                 firstname: firstName,
                 lastname: lastName
             },
             email: email,
-            password: password
-        })
-        console.log(captainData);
+            password: password,
+            vehicle: {
+                color: color,
+                plate: plate,
+                capacity: capacity,
+                vehicleType: vehicleType
+            }
+        }
+
+        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/captains/register`, CaptainData)
+
+        if (response.status === 201) {
+            const data = response.data
+            setCaptain(data.captain)
+            localStorage.setItem('token', data.token)
+            navigate('/captain-home')
+        }
 
         setFirstName('')
         setLastName('')
         setEmail('')
         setPassword('')
+        setColor('')
+        setPlate('')
+        setCapacity('')
+        setVehicleType('')
     }
 
     return (
@@ -85,7 +111,7 @@ const CaptainSignup = () => {
                         Enter Vehicle Details
                     </h3>
 
-                    <div className="space-y-4">  
+                    <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col">
                                 <label className="text-sm text-gray-600 mb-1">Vehicle Color</label>
@@ -112,7 +138,7 @@ const CaptainSignup = () => {
                             </div>
                         </div>
 
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col">
                                 <label className="text-sm text-gray-600 mb-1">Vehicle Capacity</label>
@@ -128,20 +154,23 @@ const CaptainSignup = () => {
 
                             <div className="flex flex-col">
                                 <label className="text-sm text-gray-600 mb-1">Vehicle Type</label>
-                                <input
+                                <select
                                     required
-                                    value={Type}
-                                    onChange={(e) => setType(e.target.value)}
-                                    className="bg-gray-100 rounded-lg px-4 py-2 border focus:outline-none focus:ring-2 focus:ring-black"
-                                    type="text"
-                                    placeholder="e.g. Sedan"
-                                />
+                                    value={vehicleType}
+                                    onChange={(e) => setVehicleType(e.target.value)}
+                                    className="bg-gray-100 rounded-lg px-4 py-2 border focus:outline-none focus:ring-2 focus:ring-black w-full"
+                                >
+                                    <option value="">Select a vehicle type</option>
+                                    <option value="car">Car</option>
+                                    <option value="bike">Bike</option>
+                                    <option value="auto">Auto</option>
+                                </select>
                             </div>
                         </div>
 
                     </div>
 
-                    <button className='flex items-center justify-center w-full bg-black text-white py-2 rounded mt-3 mb-2'>Signup</button>
+                    <button className='flex items-center justify-center w-full bg-black text-white py-2 rounded mt-3 mb-2'>Create captain Account</button>
                 </form>
 
                 <p className='text-center'>Already have a account ? <Link to='/captain-login' className='text-blue-600'>Login as a Captain</Link></p>
